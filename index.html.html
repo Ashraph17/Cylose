@@ -1,0 +1,790 @@
+
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Service Portal | Admin & User</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com">
+    <script src="https://cloudflare.com"></script>
+    <style>
+        :root { --p: #004085; --s: #28a745; --a: #ffc107; --d: #343a40; --l: #f0f2f5; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background: var(--l); color: #333; }
+        
+        /* Navigation */
+        nav { background: var(--p); padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; color: white; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        .nav-links span { margin-left: 20px; cursor: pointer; font-weight: 600; text-transform: uppercase; font-size: 14px; }
+        .nav-links span:hover { color: var(--a); }
+
+        /* Hero / About Admin */
+        .hero { background: white; padding: 40px 8%; display: flex; align-items: center; gap: 30px; border-bottom: 4px solid var(--a); }
+        .admin-img { width: 130px; height: 130px; border-radius: 50%; border: 4px solid var(--p); object-fit: cover; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .about-text h2 { margin: 0; color: var(--p); font-size: 28px; }
+        .about-text p { color: #555; line-height: 1.6; max-width: 700px; }
+
+        /* Update Marquee */
+        .update-bar { background: var(--a); padding: 10px 5%; font-weight: bold; display: flex; align-items: center; border-bottom: 1px solid #ddd; }
+        .update-bar marquee { flex: 1; font-size: 15px; }
+
+        /* Services Grid */
+        .container { padding: 40px 8%; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; }
+        .card { background: white; padding: 30px; border-radius: 15px; text-align: center; transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 6px solid var(--p); }
+        .card:hover { transform: translateY(-10px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .card i { font-size: 50px; color: var(--p); margin-bottom: 20px; }
+        .card h3 { margin-bottom: 15px; color: #222; }
+
+        /* Tracking Section */
+        .tracking-box { background: white; padding: 30px; border-radius: 15px; margin-top: 40px; border: 1px solid #ddd; }
+        .input-group { display: flex; gap: 10px; margin-top: 15px; }
+        input, select { padding: 12px; border: 1px solid #ccc; border-radius: 8px; flex: 1; font-size: 16px; }
+
+        /* Modal Settings */
+        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); overflow-y: auto; }
+        .modal-content { background: white; margin: 3% auto; padding: 35px; width: 90%; max-width: 800px; border-radius: 20px; position: relative; line-height: 1.7; }
+        .close { position: absolute; right: 25px; top: 15px; font-size: 35px; cursor: pointer; color: #888; }
+        .close:hover { color: red; }
+
+        /* Sub-Services List (For RITA) */
+        .sub-service { background: #f8f9fa; padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 5px solid var(--s); }
+        .sub-service h4 { margin: 0 0 10px 0; color: var(--p); }
+
+        /* Buttons */
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; color: white; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; transition: 0.2s; }
+        .btn-check { background: var(--p); width: 100%; justify-content: center; }
+        .btn-wa { background: #25D366; }
+        .btn-pdf { background: #e74c3c; }
+        .btn-share { background: #3498db; }
+        .btn-admin { background: var(--d); margin-top: 10px; }
+
+        .modal-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
+
+        /* Admin Dashboard UI */
+        #adminView { display: none; }
+        .admin-card {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1); /* Inaongeza kivuli kizuri */
+    border-left: 5px solid #ff4500; /* Inaweka mstari wa rangi pembeni */
+    transition: transform 0.3s;
+}
+
+.admin-card:hover {
+    transform: scale(1.02); /* Inapanuka kidogo ukigusa */
+}
+
+        @media print { .no-print { display: none !important; } .modal { position: absolute; display: block; background: white; width: 100%; } }
+        @keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Hii itafanya sehemu yoyote ya 'section' au 'card' itokee kwa urembo */
+section, .admin-card {
+    animation: fadeInUp 0.8s ease-out;
+}
+.main-footer {
+    background-color: white; /* Rangi ya background kama kadi zako */
+    padding: 20px 5%;
+    text-align: center;
+    border-top: 4px solid var(--p); /* Inatumia rangi yako ya msingi toka kwenye root */
+    margin-top: 40px;
+    color: blue#222;
+}
+
+.footer-content p {
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.contact-info {
+    margin-top: 20px;
+}
+
+.contact-info a {
+    color: var(--p); /* Inatumia rangi yako ya blue/purple */
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.contact-info a:hover {
+    text-decoration: underline;
+}
+    </style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav class="no-print">
+    <div class="logo"><strong><i class="fas fa-server"></i> <UNIV class="MEDIA TZ"></UNIV></strong></div>
+    <div class="nav-links">
+        <span onclick="toggleView('user')"><i class="fas fa-home"></i> Home</span>
+        <span onclick="ulizaPassword()"><i class="fas fa-user-lock"></i> Admin Panel</span>
+    </div>
+</nav>
+
+<!-- Admin/About Section -->
+<section class="hero no-print" id="aboutSection">
+    <img src="c:\Users\ashir\OneDrive\Documentos\admin pic.jpeg" alt="Admin" class="admin-img"> <!-- Weka picha yako hapa -->
+    <div class="about-text">
+        <h2 id="dispTitle">ABOUT US</h2>
+        <p id="dispDesc">🎓Karibu kwenye UNIV. MEDIA. TZ, Platform rasmi ya habari, ushauri, na msaada wa kitaalamu kwa wanafunzi wa ngazi zote na jamii kwa ujumla. Tuko hapa kukurahisishia michakato migumu ya kiofisi.
+            Hili ndio daraja lako kwa wewe mwanafunzi unaetaka kwenda chuo lakini pia kwa wale waliopo chuo. Humu utapata kuelewa mambo yanayohusu mikopo, vyuo, na pia kuhusu vyeti vya kuzaliwa na kifo.
+</p>
+<a href="https://chat.whatsapp.com/LpyLrUUSsGq5AXUG6iFQIF?mode=gi_t"
+target="_blank">
+Click here to join our WhatsApp Group</a> ili kupata update na msaada kwa haraka</p>
+<p>Admin: Ashraph</p>
+<p>Chuo: DIT</p>
+<p>Program: Bachelor of Technology in Laboratory Science(BTLS).</p>
+    </div>
+</section>
+
+<!-- Live Updates -->
+<div class="update-bar no-print">
+    <span style="white-space:nowrap; background:var(--p); color:white; padding:5px 10px; border-radius:4px; margin-right:10px;">HABARI MPYA:</span>
+    <marquee id="liveUpdate">Karibu mwanafamilia wa UNIV.MEDIA.TZ. Karibu tukuhudumie!</marquee>
+</div>
+
+<!-- USER VIEW -->
+<div id="userView" class="container no-print">
+    <div class="grid">
+        <!-- HESLB -->
+        <div class="card">
+            <i class="fas fa-graduation-cap"></i>
+            <h3>HESLB - MKOPO</h3>
+            <p>Maelezo na maombi ya mkopo kwa wanafunzi wa elimu ya juu.</p>
+            <button class="btn btn-check" onclick="openService('HESLB')">SOMA ELIMU & MAOMBI</button>
+        </div>
+
+        <!-- RITA -->
+        <div class="card">
+            <i class="fas fa-file-signature"></i>
+            <h3>RITA SERVICES</h3>
+            <p>Vyeti vya Kuzaliwa, Vifo na Uhakiki wa Vyeti (Verification).</p>
+            <button class="btn btn-check" onclick="openService('RITA')">SOMA ELIMU & MAOMBI</button>
+        </div>
+
+        <!-- VYUO -->
+        <div class="card">
+            <i class="fas fa-university"></i>
+            <h3>VYUO (TCU & NACTVET)</h3>
+            <p>Udahili wa vyuo vikuu na vyuo vya kati kote nchini.</p>
+            <button class="btn btn-check" onclick="openService('VYUO')">SOMA ELIMU & MAOMBI</button>
+        </div>
+    </div>
+
+    <!-- Reference Tracking -->
+    <div class="tracking-box">
+        <h3><i class="fas fa-search-location"></i> Fatilia Maombi Yako</h3>
+        <p>Weka 'Reference Number' uliyopewa na Admin kuona maendeleo ya kazi yako.</p>
+        <div class="input-group">
+            <input type="text" id="refSearch" placeholder="Mfano: UNIV-7788">
+            <button class="btn btn-check" style="width:auto" onclick="trackJob()">ANGALIA</button>
+        </div>
+        <div id="trackResult" style="margin-top:15px; font-weight:bold; color:var(--p);"></div>
+    </div>
+</div>
+
+
+<!-- ADMIN VIEW (DASHBOARD) -->
+<div id="adminView" class="none-print">
+    <h2 style="display: none;">Dashboard ya Admin</h2>
+    <div class="grid">
+        <!-- Update Content -->
+        <div class="admin-card">
+            <h4>1. Badili Habari (Updates)</h4>
+            <textarea id="adminMarquee" class="input-group" style="width:95%; height:60px; margin-bottom:10px; border-radius:8px; padding:10px;" placeholder="Andika habari itakayotembea juu..."></textarea>
+            <button class="btn btn-admin" onclick="updateMarquee()">Publish Update</button>
+        </div>
+
+        <!-- Manage Tracking -->
+        <div class="admin-card">
+            <h4>2. Manage Reference Numbers</h4>
+            <input type="text" id="adminRef" placeholder="Reference No (e.g UNIV-101)" class="input-group" style="width:90%; margin-bottom:10px;">
+            <select id="adminStatus" class="input-group" style="width:97%; margin-bottom:10px;">
+                <option>Maombi yamepokelewa</option>
+                <option>Inafanyiwa kazi (Processing)</option>
+                <option>Malipo yanasubiriwa (Pending Payment)</option>
+                <option>Kazi imekamilika (Completed)</option>
+                <option>Kuna Tatizo - Wasiliana Nasi</option>
+            </select>
+            <button class="btn btn-admin" onclick="saveTracking()">Update Status</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL (ELIMU & ACTIONS) -->
+<div id="serviceModal" class="modal">
+    <div class="modal-content" id="modalPrint">
+        <span class="close no-print" onclick="closeModal()">&times;</span>
+        <div id="contentArea">
+            <!-- Data itajazwa na JS -->
+        </div>
+
+        <!-- Actions -->
+        <div class="modal-actions no-print">
+            <a href="#" id="whatsappBtn" class="btn btn-wa" target="_blank"><i class="fab fa-whatsapp"></i> Tuma Taarifa zako WhatsApp</a>
+            <button type="button" class="btn btn-pdf" onclick="generatePDF()"><i class="fas fa-file-pdf"></i> Download PDF</button>
+            <button class="btn btn-share" onclick="shareMe()"><i class="fas fa-share-alt"></i> Share</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function generatePDF() {
+    // Chagua sehemu unayotaka kuipakua (id ya contentArea)
+    const element = document.getElementById('contentArea');
+    
+    // Mpangilio wa PDF yako
+    const opt = {
+        margin:       1,
+        filename:     'Elimu_UnivMediaTZ.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    // Amri ya kutengeneza na kudownload
+    html2pdf().set(opt).from(element).save();
+}
+    // Database ya uongo (Simulated Database)
+    let jobsDB = { "REF-101": "Kazi imekamilika! Angalia email yako.", "REF-102": "Inafanyiwa kazi (Processing)..." };
+
+    function openService(service) {
+        const modal = document.getElementById('serviceModal');
+        const content = document.getElementById('contentArea');
+        const wa = document.getElementById('whatsappBtn');
+        let html = "";
+        let msg = "";
+
+        if(service === 'HESLB') {
+            html = `<h2>Elimu: Maombi ya Mkopo (HESLB)</h2>
+                    <p><b>HESLB</b> Higher Education Studets' Loan Board (HESLB) ni taasisi ya serikali ya Tanzania iliyoanzishwa kwa lengo la kuwezesha upatikanaji wa elimu ya juu kwa kutoa mikopo kwa wanafunzi wenye uhitaji wa kifedha. HESLB ina jukumu la kugharamia gharama mbalimbali za masomo kama:
+                         <ul>
+                            <li> ADA (Tuition Fees)</li>
+                            <li> CHAKULA NA MALAZI (Meals and accomodation)</li>
+                            <li> VITABU NA VIFAA VYA KUJIFUNZIA (Books and Stationery)</li>
+                            <li> MAHITAJI MAALUM (Special Faculty Requirement)</li>
+                            <li> MAFUNZO KWA VITENDO (Field Practical Training)</li>
+                            <li> UTAFITI (Research)</li> </p>
+                    <div class="sub-service">
+                        <h4>Mahitaji ya Maombi:</h4>
+                        <p> A. TAARIFA ZA USAJILI</p>
+                        <ol>
+                            <li>Majina yako matatu</li>
+                            <li>Rita verification code/number.</li>
+                            <li>Namba ya Mtahiniwa wa Kidato cha Nne na mwaka uliomaliza.</li>
+                            <li>Active Email.</li>
+                            <li>Namba yako ya simu</li>
+                        </ol>
+                        <p> B. TAARIFA ZA MSINGI (BASIC INFORMATON).</p>
+                        <ol>
+                            <li>Passport size ya muombaji</li>
+                            <li>Taarifa za benki<ul>
+                                <li>Jina la Benki</li>
+                                <li>Namba ya account ya Benki</li>
+                                <li>Majna yanayoonekana kwenye account ya Benki (Yawe sawa na yale uliyosajliwa shule)</li></ul>
+                                </ol>
+                        <p> C. TAARIFA ZA MAKAZI (DEMOGRAPHIC INFORMATION).</p>
+                        <ol>
+                            <li>Mkoa na wlaya uliyozaliwa</li>
+                            <li>Namba yako ya NIDA.
+                            <li> Napa Reference number. (Hii inapatikana baada ya kuomba Barua ya utambulisho wa makazi)</li>
+                            </ol>
+                            <p> D. TAARIFA ZA AWALI( PRELIMINARY INFORMATION)</p>
+                            <ol>
+                                <li>Taarifa za BABA Na MAMA<ul>
+                                    <li>Unamfaham baba/MAMA yako? (Jibu NDIYO au HAPANA)</li>
+                                    <li>Yupo hai? (Kama amefariki tayari tuma RITA verifcation code ya cheti cha kifo</li>
+                                    <li>KAMA YUPO HAI
+                                        <ul>
+                                        <li>Majina yake matatu</li>
+                                        <li>Kazi anayofanya</li>
+                                        <li>NIDA number ya BABA/MAMA</li>
+                                        <li>NAPA Reference number ya BABA/MAMA</li>
+                                        <li>Namba yake ya simu</li>
+                                        <li>Email yake</li>
+                                        <li>Elimu aliyofkia</li>
+                                        <li>Je ana ulemavu wowote? (Jibu NDIYO au HAPANA - Kama anao eleza aina ya ulemevu)</li></ul>
+                                        </ul></li>
+                                <li>Taarifa za Mlezi (Kama unaye)
+                                    <ul>
+                                            <li>Majna yake matatu</li>
+                                            <li>Kazi anayofanya</li>
+                                            <li>Elimu aliyofikia</li>
+                                            <li>Namba yake ya simu</li>
+                                            <li>Email yake</li>
+                                            <li>NAPA Reference number</li>
+                                            </ul></li>
+                                <li>Taarifa za TASAF(Kama familia inanufaika)
+                                    <ul>
+                                    <li>Namba ya TASAF</li>
+                                    <li>Majina yako matatu kama ulivyoandikisha kwenye TASAF</li>
+                                    </ul></li>
+                                    </ol>
+                        <p> D. TAARIFA ZA ELIMU (EDUCATION INFORMATION)</P>
+                            <ol>
+                                <li>Je umefanya mtihani wa form four mara ngapi?<ul>
+                                    <li>Taja namba zote za mtihani wa form four na mwaka uliofanya</li>
+                                    <li>Je ulifadhiliwa katika elimu ya form four? (NDIYO/HAPANA)</li>
+                                    </ul></li>
+                                <li>baada ya form four ulienda Advance au diploma?</li>
+                                        <p> ADVANCE</p>
+                                        <li>Namba ya mtihani form six na mwaka uliomaliza</li>
+                                        <li>Jew ulifadhiliwa katika elimu ya form six? (NDYO/HAPANA)</li>
+                                        <p> DIPLOMA(Kma ulienda)</p>
+                                        <li>Jina la chuo ulichosoma</li>
+                                        <li>Award Verification number(AVN)</li>
+                                        <li>Mwaka ulioanza na kumaliza Diploma</li>
+                                        <li>GPA</li>
+                                        <li>Registration  number yako ya Diploma</li>
+                                        <li>Ulifadhiliwa?(NDIYO/HAPANA)</li>
+                                        <li>Je wewe ni mwanafunzi unaeanza mwaka wa kwanza au unaendelea na masomo(yaani continous)?</li>
+                                        kama unaendelea na masomo:
+                                        <ul>
+                                            <li>Jina la chuo</li>
+                                            <li>Kozi unayosoma</li>
+                                            <li>Registration number</li></ul>
+                                         </ol>
+                                         <p> E. TAARIFA ZA MDHAMINI</p>
+                                         <p>Mdhamini anaweza kuwa mzazi au mlezi. kama sio mzazi au mlezi hakikisha mdhamini utakayemtumia basi uwe umemtaja kwenye kipengele cha mdhamini.</p>
+                                         <ol>
+                                            <li>Passport size ya mdhamini</li>
+                                            <li>kitambulisho kimoja wapo kati ya hivi: <ul>
+                                                <li>NIDA number</li>
+                                                <li>Pass ya kusafiria</li>
+                                                <li>Leseni ya udereva(Picha yake inahitajika)</li>
+                                                <li>Kadi ya mpiga kura(Picha ya kadi inahitajika)</li>
+                                                </ul></li>
+
+                                           <p> MUHIMU</p>
+                                           <ol>
+                                            <li>Soma vizuri kila lipengele kabla ya kutuma taarifa</li>
+                                            <li>Kwa mwanafunzi anayeomba mkopo kwa mara ya kwanza kuna gharama ya kutuma maombi , yaani application fee TSH 30000/= AMBAYO ITALIPWA MOJA KWA MOJA KWENDA BODI YA MKOPO KWA CONTROL NUMBER MAALUM.</li>
+                                            <li>Gharama ndogo ndogo ambazo pia utakutanana nazo ni kama ifuatavyo<ul>
+                                                <li>Gharama ya mwanasheria inakadiriwa max 15000/=</li>
+                                                <li>Gharama ya afisa mtendaji/ mwenyekiti inakadiriwa max 5000/=</li>
+                                                <li>Gharama ya ku-print na kuscan form za mkopo inakadiriwa max 5000/=</li></ul>
+                                            <li>Gharama ya sisi tutakaokufanyia kazi ya kukuombea mkopo 10000/= (HII INALIPWA BAADA YA KAZI YAKO KUKAMILIKA)</li>
+                                            <li>MAKUNDI YAFUATAYO UPEWA KIPAUMBELE KATIKA UPANGAJI WA MKOPO
+                                                <ul>
+                                                    <li>Walioambatanisha cheti cha kifo</li>
+                                                    <li>Walioambatanisha form ya ufadhili</li>
+                                                    <li>Walioambatanisha form ya ulemavu</li>
+                                                    <li>Walioweka uthibitisho wa kufadhiliwa na TASAF</li>
+                                                    <li>Waliowasilisha fomu ya kulelewa vituo vya watoto yatima</li>
+                                                    </ul>
+                                                    </ol>     
+                                         
+                                         <p>NB:HAKIKISHA KUWA KIPENGELE CHA TAARIFA ZA BABA NA MAMA UNAZIANDAA KILA MMOJA KIVYAKE( SEPARATELY).
+                                            PIA HAKIKISHA KAMA UMEFADHILIWA BASI UNA USHAHIDI WA NYARAKA KUTOKA KWENYE TAASISI AU SHIRIKA LILILOKUFADHILI.</p>
+
+
+
+                                            <hr style="border: 1px solid #ddd; margin: 20px 0;">
+                                            <h2 class="appeal-heading">RUFAA ZA MKOPO (LOAN APPEALS)</h2>
+                                                    <p>Rufaa ni mchakato wa kisheria unaotolewa na Bodi ya mikopo(HESLB) baada ya matokeo ya upangaji mikopo kutoka.
+                                                        Hii inawahusu wanafunzi ambao<ul>
+                                                        <li>Hawakupata mkopo kabisa (Non-beneficiaries)</li>
+                                                        <li>Waliopata mkopo mdogo usioendana  na uhitaji wao(Under-funded)</li></ul></p>
+                                                        <p>Kwenye appeal tunatumia supportive documents ambazo zitakusaidia kushawishi bodi ya mikopo waweze kukupangia mkopo au kukuongezea mkopo kama haukuridhika na kiwango walichokupangia</p>
+                                                        <p>Inatokeaga sometimes usiweke supportive document yoyote ukakata rufaa na ukafanikiwa kupata au kuongezewa mkopo. Ila ni anaeweka supportive documents ndiyo ana nafasi kubwa sana ya kupata mkopo wakati wa appeal</p>
+                                                    <p>JE ni supportive documemts gani tunaweza kuzitumia kukata rufaa?
+                                                        <ol>
+                                                            <li>CHETI CHA KIFO CHA MZAZI</li>
+                                                            <li>FOMU YA UFADHILI</li>
+                                                            <li>FOMU YA ULEMAVU YA MZAZI AU MUOMBA MKOPO</li>
+                                                            <li>TASAF MEMBERSHIP</li>
+                                                            <li>FOMU YA KULELEWA KITUO CHA WATOTO YATIMA</li>
+                                                            <li>OTHER REASONS: Hapa ni sababu zingine au viambatanisho vingine ambavyo unaweza kuvitumia kukata rufaa <ul>
+                                                                <li>Barua kutoka serikali ya mtaa inayothibitisha hali duni ya familia</li>
+                                                                <li>Barua inayoonyesha kustaafu kazi kwa mzazi</li>
+                                                                <li>Uthibitisho wa ulemevu wa mlezi wako</li>
+                                                                <p>Pia unaweza kutumia sababu zingine ambazo unaona zitafanya rufaa yako isikilizwe</p></ul></ol></p>
+                                                    <p>Je  dirisha la appeal ufunguliwa lini?</p>
+                                                    <p>Dirisha la rufaa ufunguliwa muda mchache baada ya kukamilika kwa upangaji wa mikopo kwa wanafunzi kwa mwaka husika, so tarehe rasmi utangazwa na bodi ya mikopo wenyewe. kwa kawaida HESLB hutoa siku 7 mpaka 14 ili wanafunzi wawasilishe maombi yao kupitia mfumo wa SIPA</p>
+                                                    <p>USHAURI WA ADMIN: Licha ya kuwepo kwa sababu nyingi ambazo zinaweza sababisha rufaa yako kusikilizwa, Hizi hapa ndio Documents ambazo ukizitumia wakati wa rufaa zitapelekea rufaa yako kusikilizwa na kufanyiwa kazi :<ol>
+                                                        <li>Cheti cha kifo cha mzazi</li>
+                                                        <li>Fomu ya ulemavu ya mzazi au muomba mkopo mwenyewe</li>
+                                                        <li>Fomu ya ufadhili</li>
+                                                        <li>TASAF membership</li>
+                                                        <li>Fomu ya uthibitisho ya kulelewa katika kituo cha watoto yatima</li></ol></p>
+                                                    <p>MUHIMU:</p>
+                                                        <p>Appeal ndio fursa yetu ya mwisho kabisa kujitetea ili tuweze kupata mkopo, Niwasihi sana jitahidi upate hizo documents zenye nguvu ili iweze kukusaidia kukata rufaa pale dirisha la appeal linapofunguliwa<P>
+                    </div>`;
+            msg = "Habari Admin, Nahitaji msaada wa maombi ya HESLB.";
+        } 
+        else if(service === 'RITA') {
+            html = `<h2>Elimu: Huduma za RITA</h2>
+                    <div class="sub-service">
+                        <h4>1. Maombi ya Cheti cha Kuzaliwa</h4>
+                        <p>Cheti cha kuzaliwa ni haki ya kila mtu ili aweze kutambulika kisheria, bila cheti inaweza sababisha ukakosa haki muhim kama vile elimu na huduma za afya.
+                            Chukua hatua mapema pia hakikisha unapata cheti cha kuzaliwa mapema.</p>
+                            <p>Ukishagundua kuwa una cheti lakini kina makosa, ni vile virefu vya zamani(TYPEWRITTER) unashauriwa kuanza mchakato wa kufatilia cheti kipya, au kufanya marekebisho ili uweze kupata cheti ambacho kipe kisasa na ni new generation.</p>
+                            <p>MAHITAJI
+                                <ol>
+                                    <li>TAARIFA ZA MWOMBAJI(MTOTO)
+                                        <ul>
+                                            <li> Majina matatu(Yawe sawa na yale uliyosajiliwa shuleni)</li>
+                                            <li>Jinsia</li>
+                                            <li>Tarehe, mwezi, na mwaka wa kuzaliwa</li>
+                                            <li>Namba ya simu</li>
+                                            <li>Anwani ya barua pepe(Email)</li>
+                                            <li>Kazi unayofanya(Kama hauna andika "sina kazi")</li>
+                                            <li>Kiwango cha elimu uliyofikia</li>
+                                            <li>Mkoa, Wilaya, Kata na Mtaa ulipozaliwa</li>
+                                            <li>Je ulizaliwa peke yako au mapacha?</li>
+                                            <li>Je ulizaliwa Hospitali au nyumabani(kama ni hospitali taja jina la hiyo hospitali)</li>
+                                            <li>Mkoa, wilaya, kata na mtaa unaoishi kwa sasa</li></ul></li>
+                                    <li>TAARIFA BABA & MAMA
+                                        <ul>
+                                            <li>Majina matatu kamili</li>
+                                            <li>Tarehe ya kuzaliwa</li>
+                                            <li>Namba ya simu</li>
+                                            <li>Kazi anayofanya</li>
+                                            <li>Je bado anaishi?(NDIYO au HAPANA)</li>
+                                            <li>Elimu aliyofikia</li>
+                                            <li>Mkoa, wilaya, kata na mtaa anaoishi kwa sasa</li>
+                                        <p> NB: HAPA ANDAA TAARIFA ZOTE ZA BABA NA MAMA KILA MMOJA KIVYAKE</p>
+                                        </ul></li>
+                                    <li>OFISI YA RITA UNAYOTAKA KUCHUKULIA CHETI CHAKO
+                                        <ul>
+                                            <li>Taja mkoa</li>
+                                            <li>Taja wilaya unayotegemea kuchukulia cheti chako</li>
+                                            </ul></li>
+                                    <li>VIAMBATANISHO(SUPPORTING DOCUMENTS)
+                                        <ul>
+                                            <li>Kadi ya kliniki</li>
+                                            <li>Cheti cha falaki</li>
+                                            <li>Pasi ya kusafiria</li>
+                                            <li>Cheti cha kumaliza shule(Leaving certificate)</li>
+                                            <li>Kitambulisho cha mpiga kura cha muombaji</li>
+                                            <li>Kitambulisho cha mpiga kura/ taifa cha mzazi</li>
+                                            <li>Tangazo la kuzaliwa</li>
+                                            <li>Cheti cha ubatizo</li>
+                                            <li>Barua ya utambulisho kutoka kwa mtendaji wa kata/kijiji</li>
+                                            <li>Kitambulisho cha taifa(NIDA) cha muombaji</li>
+                                            <li>Leseni ya udereva ya muombaji</li>
+                                            <li>Cheti cha zamani cha muombaji(ikiwa anacho)</li></ul>
+                                            </li>
+                                    <p>MUHIMU</p>
+                                        <ol>
+                                            <li>Taarifa zote unazotoa zihakikishe ni sahihi ili kuepuka kutengenezewa cheti chenye makosa.</li>
+                                            <li>Hakikisha taarifa zako zinafanana na kukubaliana na nyaraka zingine rasmi kama vile vyeti vya shule</li> 
+                                            <li>Gharama za kuomba cheti kipya cha kuzaliwa zipo hivi: <ul>
+                                                <li>Mtoto chini ya miaka 10 cheti uombwa kwa Tsh 8000/= (hii ulipwa kwenda RITA)</li>
+                                                <li>Mtu aliyefikia miaka 10 na kuendelea cheti uombwa kwa Tsh 20000/=(hii ulipwa kwenda RITA)</li>
+                                                </ul></li>
+                                            <li>Gharama za sisi tunaokusaidia kukuombea cheti kwa njia ya mtandao ni Tsh 8000/=
+                                                (HII NI MPAKA PALE KAZI YAKO ITAKAPOKAMILIKA NA PIA TUTAKUWA RESPONSIBLE MPAKA PALE UTAKAPOPATA CHETI CHAKO)</li>
+                                                <li> Pia wale ambao wanahitaji kufanya marekebisho madogo gharama zake ni 13000/= ambayo ulipwa kwenda RITA</li>
+                                                <li>Kwa wale wanohitaji kubadilisha cheti cha zamani na kuwa kipya cha kisasa gharama  yake ni 7000/= (Hapa hakikisha kuwa taarifa zilizopo kwenye cheti cha zamani ni sahihi na hazina makosa)</li>
+                                                </ol>
+
+
+                                    
+                    </div>
+                    <div class="sub-service">
+                        <h4>2. Maombi ya Cheti cha Kifo</h4>
+                        <p>Cheti cha kifo ni moja kati ya nyaraka muhimu sana kuambatanisha wakati wa kufanya maombi yako ya mkopo, hiki uonyesha hali ya utegemezi aliyokuwa nayo mtu.
+                            Hati hii utolewa na mamlaka husika kuthibitisha kwamba mtu fulani amefariki. HESLB utoa kipaumbele kikubwa kwa wale watu ambao tayari wamepoteza wazazi au wapendwa wao (Baba/Mama)</p>
+                            <p>MAHITAJI</P>
+                                <P>Ili uweze kuomba cheti cha kifo unatakiwa kuwa na taarifa zifutazo
+                                    <ol> 
+                                        <li>TAARIFA ZA MAREHEMU (DECEASED INFORMATION)
+                                            <ul>
+                                                <li>Majina yake matatu</li>
+                                                <li>Tarehe yake ya kuzaliwa</li>
+                                                <li>Tarehe ya kifo kutokea</li>
+                                                <li>Elimu aliyofikia</li>
+                                                <li>Mahali ambapo marehemu alikuwa anaishi(Mkoa, wilaya, kata na mtaa)</li>
+                                                <li>Mahali ambapo marehem kafariki (Mkoa, wilaya, kata na mtaa)</li>
+                                                <li>Namba yake simu(weka ile inayopatikana yaani ya wewe unayeomba cheti)</li>
+                                                <li>Email(Barua pepe hai)</li>
+                                                <li>Kazi ambayo marehem alikuwa anaifanya</li>
+                                                <li>Jinsia yake(Male/Female)</li>
+                                                <li>Majina matatu ya mama wa marehemu</li>
+                                                <li>Majina matatu ya baba wa marehemu</li></ul></li>
+                                        <li>TAARIFA ZA KIFO(DEATH INFORMATION)
+                                            <ul>
+                                                <li>Mahali kifo kimetokea(NYUMBANI/HOSPITALI: kama ni hospitali taja jina la hospitali)</li>
+                                                <li>Sababu ya kifo</li></ul></li>
+                                        <li>INFORMANT'S INFORMATION(TAARIFA ZA MTOA TAARIFA)
+                                            <ul>
+                                                <li>Uhusiano wa mtoa taarifa kwa marehem</li>
+                                                <li>Majina matatu ya mtoa taarifa na jinsia yake</li>
+                                                <li>Tarehe, mwezi na mwaka wa kuzaliwa wa mtoa taarifa</li>
+                                                <li>Email ya mtoa taarifa</li>
+                                                <li>Kazi anayofanya mtoa taarifa</li>
+                                                <li>Namba ya simu ya mtoa taarifa</li>
+                                                <li>Makazi ya mtoa taarifa(Nchi, mkoa,wilaya,kata na mtaa anaoishi )</li>
+                                                <li>Utambulisho wako: Hapa unaweza tumia namba ya kadi ya mpiga kura kama unayo,au namba ya passport</li>
+                                                </ul></li>
+                                        <li>OFISI YA RITA UNAYOTAKA KUCHUKULIA CHETI
+                                            <ul>
+                                                <li>Taja mkoa</li>
+                                                <li>Taja wilaya unayotegemea kuchukulia cheti chako</li></ul></li>
+                                        <li>VIAMBATANISHO(SUPPORTING DOCUMENTS)
+                                            <ul>
+                                                <li>Muhtasari wa kikao cha wanandugu(Upigwe muhuri na afisa mtendaji kata)</li>
+                                                <li>Kibali cha mazishi</li>
+                                                <li>Kitambulisho cha marehemu(NIDA au VOTER ID(mpiga kura) )</li>
+                                                <li>Barua ya uthibitisho wa kifo iwapo kifo kilitokea nyumbani</li>
+                                                <li>Cheti cha kuzaliwa cha mtoa taarifa(Ikiwa ni mtoto wake) au cheti cha ndoa (kama ni mke au mume wa marehemu) au kitambulisho kingine cha muombaji</li>
+                                                <li>Barua ya utambulisho wa makazi(Ipigwe muhuri na afisa mtendaji)</li>
+                                                <li>Kiapo cha mahakama</li>
+                                                <li>Vitambulisho vya wanandugu waliohudhuria kikao(Nida, Kadi ya mpiga kura,passport)
+                                                <li>Cheti cha zamani(ikiwa unataka kubadilisha cheti cha kifo cha zamani kuja kipya)</li>
+                                                <li>Taarifa ya kifo kilichotokea nyumbani zaidi ya miaka kumi kutoka baraza la ulinzi na usalama la kata alipofia marehemu</li>
+                                                </ul></li>
+                                                <p>MUHIMU<ol>
+                                                    <li>Kagua na hakikisha kuwa taarifa unazozituma kuwa ni sahihi</li>
+                                                    <li>Gharama<ul>
+                                                        <li>cheti cha kifo kilichotokea na kuripotiwa mapema kabla ya miezi mitatu kupita ni Tsh 8000/=</li>
+                                                        <li>Cheti cha kifo kilichotokea na kuripotiwa baada ya miezi mitatu kupita Tsh 20000/=</li>
+                                                        <li>Kubadilisha cheti cha kifo cha zamani kuwa kipya ni Tsh  7000/=</li></ul></li>
+                                                    <li>Gharama ya sisi tunaokuombea cheti hiki mtandaoni ni Tsh 8000/= (Hii ulipwa baada ya kazi yako kukamilika)</li>
+
+
+                       </div>
+                    <div class="sub-service">
+                        <h4>3. Uhakiki wa Vyeti (Verification)</h4>
+                        <p>Uhakiki wa vyeti ufanyika kwa ajili ya mikopo ya elimu ya juu. Huduma hii ufanyika kwa njia ya mtandao kupitia site maalum ya RITA ambapo inalenga kupata "verification code " itakayotumika wakati wa kuomba mkopo.</p>
+                        <p>Uhakiki unahusisha vyeti vyote yaani cha kuzaliwa na kifo, yaani vyote vinatakiwa kuhakikiwa ili kuthibitisha usahihi wa taarifa hizo na kuwa vyeti hivyo ni vya kweli.</p>
+                           <p> VERIFICATION CODE: Hii ni namba maalum ambayo ndio lengo kubwa la kufanya uhakiki kwani ndio ubeba taarifa zako zote za cheti chako. Zinatofautiana kwa cheti cha kuzaliwa na zile za cheti cha kifo</p>
+                           <p> Mfano:</P>
+                            <p>Cheti cha kuzaliwa "20251117251-BV"</p>
+                            <p> Cheti cha kifo "2025117251-DV" </p>
+                                <p> MAHITAJI VERIFICATION CHETI CHA KUZALIWA
+                                    <ol>
+                                        <li> Cheti chako cha kuzaliwa chenye taarifa sahihi
+                                            <ul>
+                                                <li> Entry number ya cheti</li>
+                                                    <li> Mjina yako matatu. NB: YAWE SAWA NA YALE ULIYOSAJILIWA SHULE</li>
+                                                    <li> Tarehe, Mwezi na Mwaka wa kuzaliwa</li></ul>
+                                                    </li>
+                                        <li> Majina matatu ya mama</li>
+                                        <li> Namba ya kitambulisho chako cha nida (SIO LAZIMA)</li>
+                                        <li> Namba yako ya simu</li>
+                                        <li> Email(Barua pepe hai)</li>
+                                        <li> Gharama ya uhakiki 6000/= ( Hii unalipa kwenda RITA kwa control number maalum)</li>
+                                        </P>
+                                        <p>MAHITAJI VERIFICATION CHETI CHA KIFO
+                                            <ol>
+                                                <li>Entry number ya cheti cha kifo</li>
+                                                <li>Tarehe ya kifo</li>
+                                                <li>Sababu ya kufanya verification</li>
+                                                <li>Majina matatu ya mtoa taarifa (Informant)</li>
+                                                <li>Namba ya simu ya mtoa taarifa</li>
+                                                <li>Mahali anapoishi mtoa taarifa(Mkoa)</li>
+                                                <li>Uhusiano wa mtoa taarifa kwa marehemu</li>
+                                                <li>Gharama ya uhakiki 6000/= (Hii inalipwa kwenda RITA)</li>
+                                        <p> NB: Univ.media.tz tunafanya huduma hii ya kutuma maombi ya verification kwa Tsh 4000/=</p>
+                                                </ol>
+                    </div>`;
+            msg = "Habari Admin, Nahitaji msaada wa Huduma za RITA (Kuzaliwa/Kifo/Uhakiki).";
+        }
+        else if(service === 'VYUO') {
+            html = `<h2>Elimu: Udahili (TCU & NACTVET)</h2>
+                    <p><b>Udahili</b> ni mchakato wa kuomba nafasi ya masomo katika vyuo vikuu au vyuo vya kati.</p>
+                    <div class="sub-service">
+                        <h4>Mahitaji:</h4>
+                        <ol>
+                            <li>Taarifa Binafsi za muombaji
+                            <ul>
+                            <li>Majina yako matatu kama yalivyo kwenye vyeti vya shule</li>
+                            <li>Namba ya mtahiniwa (Form 4, 6).</li>
+                            <li>Anwani ya barua pepe (Email) inayofanya kazi.</li>
+                            <li>Namba ya simu itakayopokea ujumbe (OTP).</li>
+                            <li>Jina la shule ya msingi uliyosoma(Kwa baadhi ya vyuo)</li>
+                            <li>Sanduku la posta(S.L.P/P.O.Box..)</li>
+                        </ul></li>
+                            <li>Taarifa za makazi
+                            <ul>
+                                <li>Mkoa, Wilaya, Kata, na Mtaa uliozaliwa</li>
+                                <li>Mkoa, Wilaya, Kata na Mtaa unaoishi kwa sasa</li>
+                                </ul></li>
+                            <li>Taarifa za wazazi(BABA na MAMA)/ Mlezi
+                                <ul>
+                                    <li>Majina matatu ya mama & Baba</li>
+                                    <li>Namba ya simu ya Mama & Baba</li>
+                                    <li>Tarehe ya kuzaliwa ya Mama & Baba</li>
+                                    <li>Mkoa, Wilaya, Kata, na Mtaa anapoishi mzazi/mlezi</li>
+                                    <li> Sanduku la posta (S.L.P/ P.O. Box..)</li></ul>
+                            <li>Chaguo la vyuo na Kozi
+                                <ul>
+                                    <li>Vyuo unaweza kuomba kuanzia kimoja na zaidi ( Vi 3, 4, 5....n.k</li>
+                                    <li>Kwa kila chuo chagua angalau kozi TATU unazotaka kusoma
+                                    <p>Mfano</p>
+                                    Chuo:Dar es salaam Institute of Technology (DIT)<ul>
+                                    <li>Kozi 1: Biomedical Engineering</li>
+                                    <li>Kozi 2: Bachelor of Technology in Laboratory Science</li>
+                                    <li>Kozi 3: Bachelor of Engineering in Mechanical Engineering</li>
+                                    </li></ul>
+                                    </li>
+                                    <P> #Ukiwa na Taarifa hizi zote mchakato wa kuomba vyuo utakuwa rahisi na wa haraka usiokuwa na makosa</p>
+                                    <p>MUHIMU</P>
+                                        <ol> 
+                                            <li>Wakati wa kuchagua kozi za kusoma tuzingatie haya:<ul>
+                                                <li>Admission requirement</li>
+                                                <li>Minimum Institutional Admission point</li>
+                                                <li>Admission Capacity</li>
+                                                </ul>
+                                                </li>
+                                            <li>Maelezo yote kwenye kipengelecha kwanza yanapatikana kwenye TCU Guidebook hivyo ni wajibu kukisoma na kukielewa</li>
+                                            <li>Wenzangu wa combination za Science especially PCB fanya maamuzi pia kwa kusikiliza ushauri wa ADMIN kwani ushindani ni mkubwa sana</li>
+                                            <li>Soma kwa makini kila kipengele kabla haujatuma taarifa</li>
+                                            <li>Gharama ya kuomba chuo yaani application fee kwa nyuo vingi Nchini ni 10000/= lakini vipo ambavyo gharama uzidi hapo, vipo vingine utaomba kwa 15000/=(Mfano: DIT), 20000/= (Mfano: DMI)</li>
+                                            <li> Gharama ya sisi tunaokuombea vyuo , ambapo kwa kila chuo kimoja tunaomba kwa Tsh 4000/=,  kwa yule atakayeomba vyuo vitatu basi ataombewa kwa Tsh 10000/= vyote vitatu.</li>
+                                            <p>NB: GHARAMA ZETU SISI UTAZILIPA BAADA YA KUMALIZIKA KAZI YAKO</P>
+                                                </ol>
+                    </div>`;
+            msg = "Habari Admin, Nahitaji msaada wa Udahili wa Chuo (TCU/NACTVET).";
+        }
+
+        content.innerHTML = html;
+        wa.href = "https://wa.me/255783722913" + encodeURIComponent(msg);
+        modal.style.display = "block";
+    }
+
+    function closeModal() { document.getElementById('serviceModal').style.display = "none"; }
+
+    // Admin Logic
+    function toggleView(v) {
+        document.getElementById('userView').style.display = (v === 'user') ? 'block' : 'none';
+        document.getElementById('adminView').style.display = (v === 'admin') ? 'block' : 'none';
+        document.getElementById('aboutSection').style.display = (v === 'user') ? 'flex' : 'none';
+    }
+
+    function updateMarquee() {
+        const txt = document.getElementById('adminMarquee').value;
+        if(txt) { document.getElementById('liveUpdate').innerText = txt; alert("Imesasishwa!"); }
+    }
+
+    function saveTracking() {
+        const ref = document.getElementById('adminRef').value;
+        const status = document.getElementById('adminStatus').value;
+        if(ref) { jobsDB[ref] = status; alert("Hali ya " + ref + " imewekwa!"); }
+    }
+
+    function trackJob() {
+        const val = document.getElementById('refSearch').value;
+        const res = document.getElementById('trackResult');
+        res.innerText = jobsDB[val] || "Reference Number haipo. Wasiliana na Admin.";
+    }
+
+    async function shareMe() {
+        try {
+            await navigator.share({ title: 'Elimu ya Huduma', text: 'Pata maelezo ya HESLB, RITA na TCU hapa.', url: window.location.href });
+        } catch(e) { alert("Browser yako haisupport share moja kwa moja."); }
+    }
+    
+</script>
+
+<!-- 1. Hii inaita library ya PDF kutoka mtandaoni -->
+<script src="https://cdnjs.cloudflare.com"></script>
+
+<script>
+function generatePDF() {
+    const content = document.getElementById('contentArea').innerHTML;
+    const win = window.open('', '', 'height=700,width=900');
+    
+    win.document.write('<html><head><title>Univ Media TZ - Elimu</title>');
+    
+    // Hapa tunaongeza style ya watermark
+    win.document.write('<style>');
+    win.document.write(`
+        body { font-family: sans-serif; padding: 20px; position: relative; }
+        img { max-width: 100%; }
+        
+        /* Style ya Watermark */
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 80px;
+            color: rgba(200, 200, 200, 0.2); /* Rangi hafifu sana */
+            z-index: -1; /* Inakaa nyuma ya maandishi */
+            white-space: nowrap;
+            pointer-events: none;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        @media print {
+            .watermark {
+                display: block;
+            }
+        }
+    `);
+    win.document.write('</style></head><body>');
+    
+    // Tunaongeza neno la watermark hapa
+    win.document.write('<div class="watermark">univ.media.tz</div>');
+    
+    win.document.write(content);
+    win.document.write('</body></html>');
+    
+    win.document.close();
+    
+    // Tunampa muda kidogo browser isome kodi kabla ya kufungua print
+    setTimeout(() => {
+        win.print();
+    }, 500);
+}
+</script>
+<!-- PAZIA LA PASSWORD -->
+<div id="adminGate" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:10000; display:none; align-items:center; justify-content:center; color:white; font-family:sans-serif;">
+    <div style="background:#222; padding:30px; border-radius:10px; text-align:center; border:1px solid #444;">
+        <h3>🔐 Univ Media Admin</h3>
+        <p>Ingiza Password ya Admin:</p>
+        <input type="password" id="passInput" style="padding:10px; width:200px; border-radius:5px; border:none; outline:none; color: black;">
+        <br><br>
+        <button onclick="funguaAdmin()" style="padding:10px 25px; background:#ff4500; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">INGIA</button>
+        <button onclick="document.getElementById('adminGate').style.display='none'" style="background:none; color:gray; border:none; cursor:pointer; margin-left:10px;">Ghairi</button>
+    </div>
+</div>
+
+<script>
+// 1. Inaitwa ukibonyeza "Admin Panel" kwenye navigation
+function ulizaPassword() {
+    document.getElementById('adminGate').style.display = 'flex';
+}
+
+// 2. Inahakiki password na kuitumia ile amri yako ya awali (toggleView)
+function funguaAdmin() {
+    const PASSWORD_SAHIHI = "Shira@2003"; // Weka password yako hapa
+    const input = document.getElementById('passInput').value;
+
+    if (input === PASSWORD_SAHIHI) {
+        document.getElementById('adminGate').style.display = 'none'; // Ficha box
+        toggleView('admin'); // Hapa ndipo sasa ile admin view inafunguka rasmi
+        alert("Welcome Ashraph!");
+    } else {
+        alert("This site is for ADMIN Ashraph only!");
+    }
+}
+</script>
+<footer class="main-footer">
+    <div class="footer-content">
+        <p>&copy; 2025 Univ Media TZ.</p>
+            <p>All rights reserved.</p>
+        <div class="contact-info">
+            <p><strong>Contact Us:</strong></p>
+            <p>Email: <a href="mailto:ashirafumapua69@gmail.com">ashirafumapua69@gmail.com</a></p>
+            <p>Simu: <a href="tel:0783722913">0783722913</a></p>
+        </div>
+    </div>
+</footer>
+</body>
+</html>
